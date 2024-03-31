@@ -4,7 +4,6 @@ package atom.id.noticeboard.services;
 import atom.id.noticeboard.FactoryDto.MappingTopicUtils;
 import atom.id.noticeboard.domains.Message;
 import atom.id.noticeboard.domains.Topic;
-import atom.id.noticeboard.dto.MessageDto;
 import atom.id.noticeboard.dto.NewTopicDto;
 import atom.id.noticeboard.dto.TopicDto;
 import atom.id.noticeboard.dto.TopicWithMessagesDto;
@@ -13,18 +12,15 @@ import atom.id.noticeboard.exceptions.InvalidInputException;
 import atom.id.noticeboard.exceptions.NotFoundException;
 import atom.id.noticeboard.repositories.TopicRepository;
 import atom.id.noticeboard.security.MyUserDetails;
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -56,10 +52,6 @@ public class TopicService {
     public TopicWithMessagesDto updateTopic(TopicDto topic) {
 
         if(!topic.getId().isEmpty() && !topic.getName().isEmpty() && topic.getCreated() != null) {
-            String getAuthUsername = MyUserDetails.getAuthUsername();
-
-            if(!getAuthUsername.equals(topic.getName()))
-                throw new InvalidInputException("forbidden action");
 
             if(topicRepository.existsById(topic.getId())) {
                 topicRepository.save(mappingTopicUtils.mapToTopic(topic));

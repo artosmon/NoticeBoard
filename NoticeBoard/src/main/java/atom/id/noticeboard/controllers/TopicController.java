@@ -69,7 +69,7 @@ public class TopicController {
     @GetMapping("/topic")
     public ResponseEntity<List<TopicDto>> getAllTopics(
             @RequestParam(required = false,defaultValue = "0") int page,
-            @RequestParam(required = false,defaultValue = "2") int size
+            @RequestParam(required = false,defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(topicService.getAllTopics(PageRequest.of(page, size)));
     }
@@ -78,7 +78,7 @@ public class TopicController {
     public ResponseEntity<?> getMessages(
             @PathVariable String topicId,
             @RequestParam(required = false,defaultValue = "0") int page,
-            @RequestParam(required = false,defaultValue = "1") int size) {
+            @RequestParam(required = false,defaultValue = "10") int size) {
         try {
             return ResponseEntity.ok(topicService.getMessagesOfTopic(topicId,PageRequest.of(page,size)));
         } catch (NotFoundException e) {
@@ -96,7 +96,6 @@ public class TopicController {
         try {
            return ResponseEntity.ok(messageService.saveNewMessage(message,topicId));
         } catch (NotFoundException e) {
-            log.info("я здесь");
            return ResponseEntity.notFound().build();
         } catch (InvalidInputException e) {
            return ResponseEntity.badRequest().body(e.getMessage());
@@ -149,19 +148,21 @@ public class TopicController {
     public ResponseEntity<String> deleteMessageAsAdmin(@PathVariable String messageId) {
 
         try {
+            log.info("delete admin");
             messageService.deleteAnyMessage(messageId);
+            return ResponseEntity.status(204).body("message has been deleted");
         } catch (InvalidInputException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-            return ResponseEntity.status(204).body("message has been deleted");
+
     }
 
     @DeleteMapping("/topic/{topicId}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<String> deleteTopic(@PathVariable String topicId) {
+    public ResponseEntity<?> deleteTopic(@PathVariable String topicId) {
         try {
             topicService.deleteTopic(topicId);
-            return ResponseEntity.status(204).body("topic has been deleted");
+            return ResponseEntity.ok().body("topic has been deleted");
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body("something went wrong...");
