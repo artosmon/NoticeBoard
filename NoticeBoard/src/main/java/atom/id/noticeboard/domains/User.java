@@ -4,10 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Data
 @Builder
@@ -15,8 +12,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "topic")
-public class Topic {
+@Table(name = "users")
+public class User {
 
     @Id
     @Builder.Default
@@ -24,9 +21,9 @@ public class Topic {
 
     String name;
 
-    Instant createdAt;
+    String password;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "topic",cascade = CascadeType.ALL)
+    @Enumerated(EnumType.STRING)
     @Builder.Default
-    List<Message> messages = new ArrayList<>();
+    Role role = Role.USER;
 }

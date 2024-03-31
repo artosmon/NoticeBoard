@@ -12,11 +12,15 @@ import atom.id.noticeboard.services.TopicService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Log4j2
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 @RestController
@@ -43,21 +47,40 @@ public class TopicController {
         try {
             topicService.updateTopic(topic);
             return ResponseEntity.ok(topicService.updateTopic(topic));
-        } catch (NotFoundException e) {
-            return ResponseEntity.notFound().build();
+        } catch (NotFoundException | InvalidInputException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PutMapping("/topic/admin")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> updateTopicAsAdmin(@RequestBody TopicDto topic) {
+        try {
+            return ResponseEntity.ok(topicService.updateAnyTopic(topic));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (InvalidInputException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
     }
 
 
     @GetMapping("/topic")
-    public ResponseEntity<List<TopicDto>> getAllTopics() {
-        return ResponseEntity.ok(topicService.getAllTopics());
+    public ResponseEntity<List<TopicDto>> getAllTopics(
+            @RequestParam(required = false,defaultValue = "0") int page,
+            @RequestParam(required = false,defaultValue = "2") int size
+    ) {
+        return ResponseEntity.ok(topicService.getAllTopics(PageRequest.of(page, size)));
     }
 
     @GetMapping("/topic/{topicId}")
-    public ResponseEntity<?> getMessages(@PathVariable String topicId) {
+    public ResponseEntity<?> getMessages(
+            @PathVariable String topicId,
+            @RequestParam(required = false,defaultValue = "0") int page,
+            @RequestParam(required = false,defaultValue = "1") int size) {
         try {
-            return ResponseEntity.ok(topicService.getTopicWithMessages(topicId));
+            return ResponseEntity.ok(topicService.getMessagesOfTopic(topicId,PageRequest.of(page,size)));
         } catch (NotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (TopicHasNoMessagesException e) {
@@ -67,11 +90,13 @@ public class TopicController {
     }
 
     @PostMapping("/topic/{topicId}/message")
-    public ResponseEntity<?> createMessage(@PathVariable String topicId,
-                                                              @RequestBody MessageDto message) {
+    public ResponseEntity<?> createMessage(
+            @PathVariable String topicId,
+            @RequestBody MessageDto message) {
         try {
            return ResponseEntity.ok(messageService.saveNewMessage(message,topicId));
         } catch (NotFoundException e) {
+            log.info("я здесь");
            return ResponseEntity.notFound().build();
         } catch (InvalidInputException e) {
            return ResponseEntity.badRequest().body(e.getMessage());
@@ -92,6 +117,20 @@ public class TopicController {
 
     }
 
+    @PutMapping("/topic/{topicId}/message/admin")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> updateMessageAsAdmin(@PathVariable String topicId,
+                                           @RequestBody MessageDto message) {
+        try {
+            return ResponseEntity.ok(messageService.updateAnyMessage(message,topicId));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (InvalidInputException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+    }
+
 
 
     @DeleteMapping("/message/{messageId}")
@@ -100,9 +139,35 @@ public class TopicController {
             messageService.deleteMessage(messageId);
             return ResponseEntity.status(204).build();
 
-        } catch (TopicHasNoMessagesException e) {
+        } catch (TopicHasNoMessagesException | InvalidInputException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @DeleteMapping("/message/{messageId}/admin")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<String> deleteMessageAsAdmin(@PathVariable String messageId) {
+
+        try {
+            messageService.deleteAnyMessage(messageId);
+        } catch (InvalidInputException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+            return ResponseEntity.status(204).body("message has been deleted");
+    }
+
+    @DeleteMapping("/topic/{topicId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<String> deleteTopic(@PathVariable String topicId) {
+        try {
+            topicService.deleteTopic(topicId);
+            return ResponseEntity.status(204).body("topic has been deleted");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("something went wrong...");
+        }
+    }
+
+
 
 }

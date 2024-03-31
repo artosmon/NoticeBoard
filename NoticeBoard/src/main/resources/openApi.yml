@@ -69,8 +69,21 @@ paths:
       tags:
         - Client API
       summary: Show all topics
-      description: View all topics
+      description: View all topics with pagination
       operationId: listAllTopics
+      parameters:
+        - name: size
+          in: path
+          description: number of topics
+          required: false
+          schema:
+            type: int
+        - name: page
+          in: path
+          description: page number
+          required: false
+          schema:
+            type: int
       responses:
         '200':
           description: successful operation
@@ -95,6 +108,18 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: size
+          in: path
+          description: number of messages
+          required: false
+          schema:
+            type: int
+        - name: page
+          in: path
+          description: page number
+          required: false
+          schema:
+            type: int
       responses:
         '200':
           description: Successful operation
@@ -104,6 +129,24 @@ paths:
                 $ref: '#/components/schemas/TopicWithMessages'
         '400':
           description: Invalid topic ID
+    delete:
+      tags:
+        - Admin API
+      summary: Delete an existing topic
+      description: Delete an existing topic by Id
+      operationId: deleteTopic
+      parameters:
+        - name: topicId
+          in: path
+          description: ID of topic to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Successful operation
+
   /topic/{topicId}/message:
     post:
       tags:
@@ -172,6 +215,102 @@ paths:
           description: Topic not found
         '422':
           description: Validation exception
+
+
+  /user:
+    post:
+      tags:
+        - Client API
+      summary: Add a new user
+      description: Add a new user
+      operationId: AddUser
+      requestBody:
+        description: Create a new topic
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewUser'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+
+
+  /topic/admin:
+    put:
+      tags:
+        - Admin API
+      summary: Update an any existing topic
+      description: Update an existing topic by Id
+      operationId: updateTopicAsAdmin
+      requestBody:
+        description: Update an any existent topic in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Topic'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TopicWithMessages'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Topic not found
+        '422':
+          description: Validation exception
+
+  /topic/{topicId}/message/admin:
+    put:
+      tags:
+        - Admin API
+      summary: Update an any existing message as Admin
+      description: Update an any existing message by Id
+      operationId: updateAnyMessage
+      parameters:
+        - name: topicId
+          in: path
+          description: ID of topic where update the message
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Update an existent message
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Message'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TopicWithMessages'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Topic not found
+        '422':
+          description: Validation exception
+
   /message/{messageId}:
     delete:
       tags:
@@ -190,6 +329,26 @@ paths:
       responses:
         '204':
           description: Successful operation
+
+  /message/{messageId}/admin:
+    delete:
+      tags:
+        - Admin API
+      summary: Delete an any existing message
+      description: Delete an existing message by Id
+      operationId: deleteAnyMessage
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of message to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Successful operation
+
 components:
   schemas:
     Topic:
@@ -259,3 +418,31 @@ components:
           examples: [Тестовая тема]
         message:
           $ref: '#/components/schemas/Message'
+    NewUser:
+      required:
+        - name
+        - password
+      type: object
+      properties:
+        name:
+          type: string
+          examples: [Ivan]
+        password:
+          type: string
+          examples: [password]
+    Admin:
+      required:
+        - name
+        - password
+        - role
+      type: object
+      properties:
+        name:
+          type: string
+          examples: [ Ivan ]
+        password:
+          type: string
+          examples: [ password ]
+        role:
+          type: string
+          examples: [ ADMIN ]

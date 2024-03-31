@@ -2,10 +2,8 @@ package atom.id.noticeboard.FactoryDto;
 
 import atom.id.noticeboard.domains.Message;
 import atom.id.noticeboard.domains.Topic;
-import atom.id.noticeboard.dto.MessageDto;
-import atom.id.noticeboard.dto.NewTopicDto;
-import atom.id.noticeboard.dto.TopicDto;
-import atom.id.noticeboard.dto.TopicWithMessagesDto;
+import atom.id.noticeboard.domains.User;
+import atom.id.noticeboard.dto.*;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
@@ -16,6 +14,7 @@ public class MappingTopicUtils {
     public Topic mapToTopic(NewTopicDto dto) {
         Topic topic = Topic.builder()
                 .name(dto.getTopicName())
+                .createdAt(dto.getCreatedAt())
                 .build();
         dto.getMessage().setTopic(topic);
         topic.getMessages().add(dto.getMessage());
@@ -37,6 +36,7 @@ public class MappingTopicUtils {
                 .createdAt(dto.getCreated())
                 .build();
     }
+
 
     public TopicWithMessagesDto mapToTopicWithMessagesDto(Topic topic) {
         return TopicWithMessagesDto.builder()

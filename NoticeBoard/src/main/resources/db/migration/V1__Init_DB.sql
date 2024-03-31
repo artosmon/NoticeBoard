@@ -14,4 +14,17 @@ create table topic (
     primary key (id)
 );
 
+create table users (
+    id varchar(255) not null,
+    name varchar(255),
+    password varchar(255),
+    role varchar(255) check (role in ('USER','ADMIN')),
+    primary key (id)
+);
+
+create table user_role (
+    role varchar(255) check (role in ('USER','ADMIN')),
+    user_id varchar(255) not null
+);
+
 alter table if exists message add constraint FKkjoquerqtrcvqgnxlkfn7iwv0 foreign key (topic_id) references topic
