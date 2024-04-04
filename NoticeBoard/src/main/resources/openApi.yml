@@ -183,8 +183,8 @@ paths:
     put:
       tags:
         - Client API
-      summary: Update an existing message
-      description: Update an existing message by Id
+      summary: Update  only your existing  message
+      description: Update  existing message by Id
       operationId: updateMessage
       parameters:
         - name: topicId
@@ -315,8 +315,8 @@ paths:
     delete:
       tags:
         - Client API
-      summary: Delete an existing message
-      description: Delete an existing message by Id
+      summary: Delete  only your existing  message
+      description: Delete  only your existing  message by Id
       operationId: deleteMessage
       parameters:
         - name: messageId
