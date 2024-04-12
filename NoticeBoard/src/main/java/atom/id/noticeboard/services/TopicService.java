@@ -12,6 +12,7 @@ import atom.id.noticeboard.exceptions.InvalidInputException;
 import atom.id.noticeboard.exceptions.NotFoundException;
 import atom.id.noticeboard.repositories.TopicRepository;
 import atom.id.noticeboard.security.MyUserDetails;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,11 @@ public class TopicService {
     TopicRepository topicRepository;
     MessageService messageService;
     MappingTopicUtils mappingTopicUtils;
+
+    @PostConstruct
+    private void init() {
+        messageService.setTopicService(this);
+    }
 
     public TopicWithMessagesDto saveNewTopic(NewTopicDto newTopicDto) {
         if(!newTopicDto.getTopicName().isEmpty()
@@ -98,6 +104,14 @@ public class TopicService {
         topic.setMessages(messages);
 
         return mappingTopicUtils.mapToTopicWithMessagesDto(topic);
+    }
+
+    public Topic findTopicById(String id) {
+        return topicRepository.findById(id).orElseThrow(() -> new NotFoundException("Invalid topic ID"));
+    }
+
+    public void deleteTopicById(String id) {
+        topicRepository.deleteById(id);
     }
 
     private TopicWithMessagesDto getTopicWithMessages(String id) {

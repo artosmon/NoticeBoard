@@ -12,9 +12,11 @@ import atom.id.noticeboard.exceptions.TopicHasNoMessagesException;
 import atom.id.noticeboard.repositories.MessageRepository;
 import atom.id.noticeboard.repositories.TopicRepository;
 import atom.id.noticeboard.security.MyUserDetails;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
@@ -28,18 +30,21 @@ import java.util.ArrayList;
 
 @Log4j2
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Service
 public class MessageService {
 
-    MessageRepository messageRepository;
-    TopicRepository topicRepository;
-    MappingTopicUtils mappingTopicUtils;
+    final MessageRepository messageRepository;
+
+    final MappingTopicUtils mappingTopicUtils;
+
+    @Setter
+    TopicService topicService;
 
 
     public TopicWithMessagesDto saveNewMessage(MessageDto dto, String topicId) {
         if(!dto.getAuthor().isEmpty() && !dto.getText().isEmpty() && dto.getCreated() != null) {
-            Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new NotFoundException("Invalid topic ID"));
+            Topic topic = topicService.findTopicById(topicId);
             Message message = mappingTopicUtils.mapToMessage(dto, topic);
             messageRepository.save(message);
             return mappingTopicUtils.mapToTopicWithMessagesDto(topic);
@@ -64,8 +69,7 @@ public class MessageService {
 
     private TopicWithMessagesDto getUpdatedTopicWIthMessages(MessageDto dto, String topicId) {
         if(!dto.getAuthor().isEmpty() && !dto.getText().isEmpty() && dto.getCreated() != null) {
-            Topic topic = topicRepository.findById(topicId).orElseThrow(() ->
-                    new NotFoundException("Invalid topic ID"));
+            Topic topic = topicService.findTopicById(topicId);
 
             messageRepository.findById(dto.getId()).orElseThrow(() ->
                     new NotFoundException("invalid message ID"));
@@ -85,7 +89,7 @@ public class MessageService {
         if(!auth.getName().equals(message.getAuthor()))
             throw new InvalidInputException("This is not your message");
 
-        if(topicRepository.findById(message.getTopic().getId()).get().getMessages().size() <= 1)
+        if(topicService.findTopicById(message.getTopic().getId()).getMessages().size() <= 1)
             throw new TopicHasNoMessagesException("Topic should not have less than 1 messages");
 
         messageRepository.deleteById(id);
@@ -105,8 +109,8 @@ public class MessageService {
         Message message = messageRepository.findById(id).orElseThrow(() ->
                 new InvalidInputException("message with this id was not found"));
 
-        if(topicRepository.findById(message.getTopic().getId()).get().getMessages().size() <= 1)
-            topicRepository.deleteById(message.getTopic().getId());
+        if(topicService.findTopicById(message.getTopic().getId()).getMessages().size() <= 1)
+            topicService.deleteTopicById(message.getTopic().getId());
 
         messageRepository.deleteById(id);
     }
