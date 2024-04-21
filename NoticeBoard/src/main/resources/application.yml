@@ -1,13 +1,17 @@
----
 
 spring:
-  jpa:
-    database: POSTGRESQL
-    show-sql: true
-    hibernate:
-      ddl-auto: validate
   datasource:
-    url: jdbc:postgresql://localhost:5432/database?
-    username: admin
-    password: admin
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:mem:mydb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    generate-unique-name: false
+    name: database
+  jpa:
+    hibernate:
+      ddl-auto: create
+    generate-ddl: true
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
